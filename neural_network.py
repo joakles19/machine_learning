@@ -11,6 +11,11 @@ class Neuron:
 
         return result
     
+    def sigmoid_derivative(self):
+        result = self.activation * (1 - self.activation)
+
+        return result
+    
     def forward_pass(self, input_vector):
         self.inputs = input_vector
         self.z = np.dot(self.weights, input_vector) + self.bias
@@ -50,13 +55,19 @@ class NeuralNetwork:
         loss = np.mean((true_values - predicted_values) ** 2)
 
         return loss
+    
+    def train(self, x, y, L=0.1):
+        output = self.forward_pass(x)
 
-nn = NeuralNetwork()
+        error = output - y
 
-nn.add_layer(3, 2)
-nn.add_layer(2, 3)
+        last_layer = self.layers[-1]
 
-x = np.array([0.5, -1.2])
-output = nn.forward_pass(x)
+        for i, neuron in enumerate(last_layer.neurons):
+            d_output = error[i]
+            d_sigmoid = neuron.sigmoid_derivative()
 
-print(output)
+            gradient = d_output * d_sigmoid
+
+            neuron.weights -= L * gradient * neuron.inputs
+            neuron.bias -= L * gradient
