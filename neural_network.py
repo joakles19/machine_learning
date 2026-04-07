@@ -85,18 +85,7 @@ class NeuralNetwork:
 
                 gradients[l] = d_hidden
 
-# ---------------- Test ----------------
-nn = NeuralNetwork()
-nn.add_layer(3, 2)  # hidden layer (not trained yet)
-nn.add_layer(2, 3)  # output layer (trained)
-
-x = np.array([0.5, -1.2])
-y = np.array([1, 0])  # target
-
-print("Before training:", nn.forward_pass(x))
-
-# Train for 1000 iterations
-for _ in range(1000):
-    nn.train(x, y, L=0.1)
-
-print("After training:", nn.forward_pass(x))
+    def predict(self, x):
+        x = np.array(x)
+        output = self.forward_pass(x)
+        return output
