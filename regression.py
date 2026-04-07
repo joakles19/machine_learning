@@ -25,9 +25,7 @@ class BivariableLinearRegression:
         self.__train()
 
     def __gradient_descent(self, m_current: float, b_current: float, data_points: pd.DataFrame, L: float) -> tuple[float, float]:
-        """
-        Do one step of gradient descent for m and b
-        """
+        """Do one step of gradient descent for m and b"""
         n = len(data_points)
         x = data_points.iloc[:, 0].values
         y = data_points.iloc[:, 1].values
@@ -67,10 +65,8 @@ class BivariableLinearRegression:
 
 
 class MultipleLinearRegression:
-    """
-    Linear regression with multiple features.
-    Uses gradient descent to find weights.
-    """
+    """Linear regression with multiple features.
+    Uses gradient descent to find weights."""
 
     def __init__(self, dataset: pd.DataFrame, learning_rate: float = 0.001, iterations: int = 1000):
         data = dataset.dropna()
@@ -87,9 +83,7 @@ class MultipleLinearRegression:
         self.__train()
 
     def __gradient_descent(self, X: np.ndarray, y: np.ndarray, weights: np.ndarray, L: float) -> np.ndarray:
-        """
-        Compute gradient and update weights
-        """
+        """Compute gradient and update weights"""
         n = len(y)
         y_pred = X @ weights
         error = y - y_pred
@@ -114,10 +108,8 @@ class MultipleLinearRegression:
 
 
 class LogisticLinearRegression:
-    """
-    Logistic regression for binary classification.
-    Uses gradient descent to find weights.
-    """
+    """Logistic regression for binary classification.
+    Uses gradient descent to find weights."""
 
     def __init__(self, dataset: pd.DataFrame, learning_rate: float = 0.1, iterations: int = 100):
         data = dataset.dropna()
