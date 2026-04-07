@@ -1,25 +1,28 @@
 import numpy as np
 
 class Neuron:
-    def __init__(self, num_inputs, layer):
+    def __init__(self, num_inputs, layer, activation='relu'):
         self.weights = np.random.randn(num_inputs)
         self.bias = np.random.randn()
         self.layer = layer
+        self.activation_type = activation
 
-    def sigmoid_activation(self, z):
-        result = 1 / (1 + np.exp(-z))
+    def activation_function(self, z):
+        if self.activation_type == 'sigmoid':
+            return 1 / (1 + np.exp(-z))
+        elif self.activation_type == 'relu':
+            return np.maximum(0, z)
 
-        return result
-    
-    def sigmoid_derivative(self):
-        result = self.activation * (1 - self.activation)
-
-        return result
+    def derivative_function(self):
+        if self.activation_type == 'sigmoid':
+            return self.activation * (1 - self.activation)
+        elif self.activation_type == 'relu':
+            return np.where(self.activation > 0, 1, 0)
     
     def forward_pass(self, input_vector):
         self.inputs = input_vector
         self.z = np.dot(self.weights, input_vector) + self.bias
-        self.activation = self.sigmoid_activation(self.z)
+        self.activation = self.activation_method(self.z)
 
         return self.activation
     
@@ -65,7 +68,7 @@ class NeuralNetwork:
         d_output = np.zeros(len(last_layer.neurons))
 
         for i, neuron in enumerate(last_layer.neurons):
-            d_output[i] = (neuron.activation - y[i]) * neuron.sigmoid_derivative()
+            d_output[i] = (neuron.activation - y[i]) * neuron.derivative_method()
             neuron.weights -= L * d_output[i] * neuron.inputs
             neuron.bias -= L * d_output[i]
 
@@ -79,7 +82,7 @@ class NeuralNetwork:
                 for i, neuron in enumerate(layer.neurons):
                     errors = [next_neuron.weights[i] * gradients[l + 1][k] for k, next_neuron in enumerate(next_layer.neurons)]
                     error_sum = sum(errors)
-                    d_hidden[i] = neuron.sigmoid_derivative() * error_sum
+                    d_hidden[i] = neuron.derivative_method() * error_sum
                     neuron.weights -= L * d_hidden[i] * neuron.inputs
                     neuron.bias -= L * d_hidden[i]
 
