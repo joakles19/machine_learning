@@ -59,15 +59,44 @@ class NeuralNetwork:
     def train(self, x, y, L=0.1):
         output = self.forward_pass(x)
 
-        error = output - y
+        gradients = [None] * len(self.layers)
 
         last_layer = self.layers[-1]
+        d_output = np.zeros(len(last_layer.neurons))
 
         for i, neuron in enumerate(last_layer.neurons):
-            d_output = error[i]
-            d_sigmoid = neuron.sigmoid_derivative()
+            d_output[i] = (neuron.activation - y[i]) * neuron.sigmoid_derivative()
+            neuron.weights -= L * d_output[i] * neuron.inputs
+            neuron.bias -= L * d_output[i]
 
-            gradient = d_output * d_sigmoid
+        gradients[-1] = d_output
 
-            neuron.weights -= L * gradient * neuron.inputs
-            neuron.bias -= L * gradient
+        for l in reversed(range(len(self.layers) - 1)):
+                layer = self.layers[l]
+                next_layer = self.layers[l + 1]
+                d_hidden = np.zeros(len(layer.neurons))
+
+                for i, neuron in enumerate(layer.neurons):
+                    errors = [next_neuron.weights[i] * gradients[l + 1][k] for k, next_neuron in enumerate(next_layer.neurons)]
+                    error_sum = sum(errors)
+                    d_hidden[i] = neuron.sigmoid_derivative() * error_sum
+                    neuron.weights -= L * d_hidden[i] * neuron.inputs
+                    neuron.bias -= L * d_hidden[i]
+
+                gradients[l] = d_hidden
+
+# ---------------- Test ----------------
+nn = NeuralNetwork()
+nn.add_layer(3, 2)  # hidden layer (not trained yet)
+nn.add_layer(2, 3)  # output layer (trained)
+
+x = np.array([0.5, -1.2])
+y = np.array([1, 0])  # target
+
+print("Before training:", nn.forward_pass(x))
+
+# Train for 1000 iterations
+for _ in range(1000):
+    nn.train(x, y, L=0.1)
+
+print("After training:", nn.forward_pass(x))
