@@ -20,8 +20,9 @@ class DecisionTree:
         self.min_sample_split = min_sample_split
         self.root = None
 
-    def fit_data(self, dataset):
-        X, y = dataset[:, :-1], dataset[:, -1]
+    def fit_data(self, dataset=None, X=None, y=None):
+        if dataset is not None:
+            X, y = dataset[:, :-1], dataset[:, -1]
 
         self.root = self.__build_tree(X, y, depth=0)
 
@@ -34,7 +35,7 @@ class DecisionTree:
             return Node(value=leaf_value, depth=depth)
         
         data = np.column_stack((X, y))
-        split = self.__best_split(data, num_samples, num_features)
+        split = self.__best_split(data, num_features)
 
         if not split or split['info gain'] <= 0:
             return Node(value=self.__majority_class(y), depth=depth)
@@ -45,8 +46,8 @@ class DecisionTree:
         return Node(split['index'], split['threshold'], left, right, depth)
 
     def __split_data(self, data, index, threshold):
-        left = np.array([row for row in data if row[index] <= threshold])
-        right = np.array([row for row in data if row[index] > threshold])
+        left = data[data[:, index] <= threshold]
+        right = data[data[:, index] > threshold]
 
         return left, right
     
@@ -63,13 +64,14 @@ class DecisionTree:
         values, counts = np.unique(y, return_counts=True)
         return values[np.argmax(counts)]
     
-    def __best_split(self, data, num_samples, num_features):
+    def __best_split(self, data, num_features):
         best_split = {}
         max_info_gain = -float("inf")
+        feature_indices = np.random.choice(num_features, int(np.sqrt(num_features)), replace=False)
 
-        for index in range(num_features):
-            values = data[:, index]
-            thresholds = np.unique(values)
+        for index in feature_indices:
+            values = np.sort(np.unique(data[:, index]))
+            thresholds = (values[:-1] + values[1:]) / 2
 
             for threshold in thresholds:
                 data_left, data_right = self.__split_data(data, index, threshold)
@@ -100,8 +102,12 @@ class DecisionTree:
         return gain
     
     def predict(self, X):
-        prediction = np.array([self.__predict_recurs(x, self.root) for x in X])
+        X = np.array(X)
+        if X.ndim == 1:
+            X = X.reshape(1, -1)
 
+        prediction = np.array([self.__predict_recurs(x, self.root) for x in X])
+        
         return prediction
     
     def __predict_recurs(self, x, node:Node):
@@ -113,4 +119,37 @@ class DecisionTree:
         else:
             return self.__predict_recurs(x, node.right_node)
         
+class RandomForest:
+    def __init__(self, num_trees, max_depth=10, min_sample_split=2):
+        self.num_trees = num_trees
+        self.max_depth = max_depth
+        self.min_sample_split = min_sample_split
+
+    def fit_data(self, dataset):
+        self.trees = []
+        X, y = dataset[:, :-1], dataset[:, -1]
+
+        for _ in range(self.num_trees):
+            tree = DecisionTree(self.max_depth, self.min_sample_split)
+            X_sample, y_sample = self.__sample_data(X, y)
+
+            tree.fit_data(X=X_sample, y=y_sample)
+            self.trees.append(tree)
+
+    def predict(self, X):
+        tree_preds = np.array([tree.predict(X) for tree in self.trees])
+        tree_preds = np.swapaxes(tree_preds, 0, 1)
         
+        final_preds = []
+        for preds in tree_preds:
+            counts = np.bincount(preds.astype(int))
+            final_preds.append(np.argmax(counts))
+        
+        return np.array(final_preds)
+        
+
+    def __sample_data(self, X, y):
+        num_samples = X.shape[0]
+        index = np.random.choice(num_samples, num_samples, True)
+
+        return X[index], y[index]
