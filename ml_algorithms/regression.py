@@ -73,7 +73,6 @@ class MultipleLinearRegression:
         self.L = learning_rate
         self.iterations = iterations
 
-        # Add bias column
         self.X = data.iloc[:, :-1].values
         self.X = np.hstack((np.ones((self.X.shape[0], 1)), self.X))
         self.y = data.iloc[:, -1].values.reshape(-1, 1)
@@ -87,7 +86,7 @@ class MultipleLinearRegression:
         n = len(y)
         y_pred = X @ weights
         error = y - y_pred
-        grad = -(2/n) * (X.T @ error)  # <-- fixed x -> X
+        grad = -(2/n) * (X.T @ error)
 
         return weights - L * grad
 
@@ -155,3 +154,4 @@ class LogisticLinearRegression:
         """Return class predictions (0 or 1) for given X"""
         probs = self.predict_proba(X)
         return (probs >= threshold).astype(int)
+    
